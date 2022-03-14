@@ -134,8 +134,8 @@ int main()
     }
 
 
-    // init shaders and models
-    sceneShader = new Shader("shaders/shader.vert", "shaders/shader.frag");
+    // init shaders and resources
+    sceneShader = new Shader("shaders/shaders.vert", "shaders/shaders.frag");
 	carPaint = new Model("car/Paint_LOD0.obj");
 	carBody = new Model("car/Body_LOD0.obj");
 	carLight = new Model("car/Light_LOD0.obj");
@@ -274,7 +274,7 @@ void renderScene(GLFWwindow* window){
     glm::mat4 lightView = glm::lookAt(config.lightPosition, config.lightPosition+config.lightDirection, glm::vec3(0.0, 1.0, 0.0));
     glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
-    // setup depth shader
+    // setup depth shaders
     simpleDepthShader->use();
     simpleDepthShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
@@ -307,7 +307,7 @@ void renderScene(GLFWwindow* window){
     // draw the skybox
     drawSkybox();
 
-    // setup scene shader
+    // setup scene shaders
     sceneShader->use();
 
     // shadow uniforms

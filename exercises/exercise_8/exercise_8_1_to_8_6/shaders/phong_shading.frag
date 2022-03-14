@@ -3,41 +3,60 @@
 uniform vec3 camPosition; // so we can compute the view vector
 out vec4 FragColor; // the output color of this fragment
 
-// TODO exercise 8.4 setup the 'uniform' variables needed for lighting
-// light uniforms
+// light uniform variables
+uniform vec3 ambientLightColor;
+uniform vec3 light1Position;
+uniform vec3 light1Color;
+uniform vec3 light2Position;
+uniform vec3 light2Color;
 
-// material uniforms
+// material properties
+uniform vec3 objReflectionColor;
+uniform float objAmbientReflectance;
+uniform float objDiffuseReflectance;
+uniform float objSpecularReflectance;
+uniform float objSpecularExponent;
 
 // attenuation uniforms
+uniform float attenuationC0;
+uniform float attenuationC1;
+uniform float attenuationC2;
 
-// TODO exercise 8.4 add the 'in' variables to receive the interpolated Position and Normal from the vertex shader
+
+in vec3 P_frag; // position in world space
+in vec3 N_frag; // normal in world space
 
 
 void main()
 {
+   vec3 ambient = ambientLightColor * objAmbientReflectance * objReflectionColor;
 
-   // TODO exercise 8.4 - phong shading (i.e. Phong reflection model computed in the fragment shader)
-   // ambient component
+   vec3 lightDir = normalize(light1Position - P_frag);
+   float diffCoef = max(dot(N_frag, lightDir), 0.0);
+   vec3 diffuse = diffCoef * light1Color * objDiffuseReflectance * objReflectionColor;
 
-   // diffuse component for light 1
+   vec3 viewDir = normalize(camPosition - P_frag);
+   vec3 reflectDir = reflect(-lightDir, N_frag);
+   float specCoef = pow(max(dot(viewDir, reflectDir), 0.0), objSpecularExponent);
+   vec3 specular = specCoef * objSpecularReflectance * light1Color;
 
-   // specular component for light 1
+   float distance = length(light1Position - P_frag);
+   float attenuation = max(1.0 / (attenuationC0 + attenuationC1 * distance + attenuationC2 * distance * distance), 1.0);
+   vec3 diffSpecLights = (diffuse + specular) * attenuation;
 
+   lightDir = normalize(light2Position - P_frag);
+   diffCoef = max(dot(N_frag, lightDir), 0.0);
+   diffuse = diffCoef * light2Color * objDiffuseReflectance * objReflectionColor;
 
-   // TODO exercise 8.5 - multiple lights, compute diffuse and specular of light 2
+   reflectDir = reflect(-lightDir, N_frag);
+   specCoef = pow(max(dot(viewDir, reflectDir), 0.0), objSpecularExponent);
+   specular = specCoef * objSpecularReflectance * light2Color;
 
+   distance = length(light2Position - P_frag);
+   attenuation = max(1.0 / (attenuationC0 + attenuationC1 * distance + attenuationC2 * distance * distance), 1.0);
+   diffSpecLights += (diffuse + specular) * attenuation;
 
-   // TODO exercuse 8.6 - attenuation - light 1
-
-
-   // TODO exercuse 8.6 - attenuation - light 2
-
-
-   // TODO compute the final shaded color (e.g. add contribution of the (attenuated) lights 1 and 2)
-
-
-   // TODO set the output color to the shaded color that you have computed
-   FragColor = vec4(.8, .8, .8, 1.0);
+   FragColor = vec4(ambient + diffSpecLights, 1.0);
 }
 // you might have noticed that the shading contribution of multiple lights can fit a for loop nicely
 // we will be doing that later on

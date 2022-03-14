@@ -30,7 +30,7 @@ uniform vec3 viewPosition;    // world space camera position
 uniform mat4 lightSpaceMatrix;   // transforms from world space to light space
 
 void main() {
-   // send text coord to fragment shader
+   // send text coord to fragment shaders
    vs_out.textCoord = textCoord;
 
    // vertex normal in world space
@@ -43,16 +43,15 @@ void main() {
    vec3 B = -cross(N, T);
    mat3 TBN =  transpose(mat3(T, B, N));
 
-   // variables we wanna send to the fragment shader
+   // variables we wanna send to the fragment shaders
    vs_out.invTBN = inverse(TBN); // inverse of TBN, to map from tangent space to world space (rotation only)
    vs_out.LightDir_tangent = TBN * lightDirection; // light direction in tangent space
    vs_out.CamPos_tangent = TBN * viewPosition; // view in tangent space
    vs_out.Pos_tangent  = TBN * vec3(model * vec4(vertex, 1.0)); // vertex in tangent space
    vs_out.Norm_tangent = TBN * N; // vertex normal in tangent space
 
-   // TODO exercise 12.1 - transform the vertex position (vertex variable) from local space to light space
-   //  hint - you will need two matrices for that
-   vs_out.Pos_lightSpace = vec4(1.0);
+   // transform the vertex position (vertex variable) from local space to light space
+   vs_out.Pos_lightSpace = lightSpaceMatrix * model * vec4(vertex, 1.0);
 
    // final vertex transform (for opengl rendering)
    gl_Position = projection * view * model * vec4(vertex, 1.0);

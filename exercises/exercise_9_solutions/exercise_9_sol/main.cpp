@@ -327,7 +327,7 @@ void drawFloor(){
     floorShader->setFloat("attenuationC1", config.attenuationC1);
     floorShader->setFloat("attenuationC2", config.attenuationC2);
 
-    // TODO exercise 9.2 send uvScale to the shader as a uniform variable
+    // TODO exercise 9.2 send uvScale to the shaders as a uniform variable
     floorShader->setFloat("uvScale", config.uvScale);
 
 

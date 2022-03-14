@@ -57,15 +57,17 @@ const unsigned int SCR_HEIGHT = 600;
 SceneObject planeBody;
 SceneObject planeWing;
 SceneObject planePropeller;
+SceneObject planeArrow;
 Shader* shaderProgram;
 
 // global variables used for control
 // -----------------------------------
 float currentTime;
 glm::vec2 clickStart(0.0f), clickEnd(0.0f);
-
-// TODO 4.1 and 4.2 - global variables you might need
-
+glm::vec2 planePosition(0.0f);
+float planeSpeed = .0f;
+float planeDirection = .0f;
+bool isClicking = false, wasClicking = false;
 
 
 int main()
@@ -164,15 +166,38 @@ int main()
 }
 
 void drawArrow(){
-    // TODO - 4.2 implement the draw arrow
-
+    if(isClicking) {
+        glm::mat4 tran(1.0f);
+        tran = glm::translate(tran, glm::vec3(planePosition, .0f));
+        tran = glm::rotate(tran, planeDirection, glm::vec3(.0f, .0f, 1.0f));
+        tran = glm::scale(tran, glm::vec3(-0.1f, glm::length(clickEnd - clickStart), 1.0f));
+        shaderProgram->setMat4("model", tran);
+        planeArrow.drawSceneObject();
+    }
 }
 
 void drawPlane(){
-    // TODO - 4.1 translate and rotate the plane
+    if(isClicking) {
+        float dragLength = glm::length(clickEnd - clickStart);
+        if(dragLength > 0.001f)
+            planeDirection = glm::acos(glm::dot(glm::normalize(clickEnd - clickStart), glm::vec2(.0f, 1.0f)));
+        planeDirection *= clickEnd.x > clickStart.x ? -1.0f : 1.0f;
+    }
+    else if (wasClicking) {
+        float dragLength = glm::length(clickEnd - clickStart);
+        if(dragLength > 0.001f) {
+            planeSpeed = .01f * dragLength;
+            planeDirection = glm::acos(glm::dot(glm::normalize(clickEnd - clickStart), glm::vec2(.0f, 1.0f)));
+            planeDirection *= clickEnd.x > clickStart.x ? -1.0f : 1.0f;
+        }
+        wasClicking = false;
+    }
+    else {
+        planePosition += planeSpeed * glm::vec2(-glm::sin(planeDirection), glm::cos(planeDirection));
+    }
 
-    glm::mat4 rotation(1.0f);
-    glm::mat4 translation(1.0f);
+    glm::mat4 rotation = glm::rotateZ(planeDirection);
+    glm::mat4 translation = glm::translate(planePosition.x, planePosition.y, .0f);
 
     // scale matrix to make the plane 10 times smaller
     glm::mat4 scale = glm::scale(.1f, .1f, .1f);
@@ -219,7 +244,7 @@ void drawPlane(){
 
 void setup(){
     // initialize shaders
-    shaderProgram = new Shader("shader.vert", "shader.frag");
+    shaderProgram = new Shader("shaders/shaders.vert", "shaders/shaders.frag");
 
     PlaneModel& airplane = PlaneModel::getInstance();
     // initialize plane body mesh objects
@@ -240,9 +265,12 @@ void setup(){
                                            airplane.planePropellerIndices);
     planePropeller.vertexCount = airplane.planePropellerIndices.size();
 
-    // TODO 4.2 - load the arrow mesh
-
-
+    Primitives& primitives = Primitives::getInstance();
+    // initialize plane arrow mesh objects
+    planeArrow.VAO = createVertexArray(primitives.arrowVertices,
+                                           primitives.arrowColors,
+                                           primitives.arrowIndices);
+    planeArrow.vertexCount = primitives.arrowIndices.size();
 }
 
 
@@ -252,13 +280,13 @@ unsigned int createVertexArray(const std::vector<float> &positions, const std::v
     // bind vertex array object
     glBindVertexArray(VAO);
 
-    // set vertex shader attribute "pos"
+    // set vertex shaders attribute "pos"
     createArrayBuffer(positions); // creates and bind  the VBO
     int posAttributeLocation = glGetAttribLocation(shaderProgram->ID, "pos");
     glEnableVertexAttribArray(posAttributeLocation);
     glVertexAttribPointer(posAttributeLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    // set vertex shader attribute "color"
+    // set vertex shaders attribute "color"
     createArrayBuffer(colors); // creates and bind the VBO
     int colorAttributeLocation = glGetAttribLocation(shaderProgram->ID, "color");
     glEnableVertexAttribArray(colorAttributeLocation);
@@ -315,20 +343,24 @@ void button_input_callback(GLFWwindow* window, int button, int action, int mods)
     glfwGetCursorPos(window, &screenX, &screenY);
     glfwGetWindowSize(window, &screenW, &screenH);
 
-    // TODO 4.1 and 4.2 - you may wish to update some of your global variables here
-
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        // set the start position
-        cursorInNdc(screenX, screenY, screenW, screenH, clickStart.x, clickStart.y);
-        // reset the end position
-        cursorInNdc(screenX, screenY, screenW, screenH, clickEnd.x, clickEnd.y);
-
-    }
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-        // set the end position
-        cursorInNdc(screenX, screenY, screenW, screenH, clickEnd.x, clickEnd.y);
-        // reset the start position
-        cursorInNdc(screenX, screenY, screenW, screenH, clickStart.x, clickStart.y);
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if(action == GLFW_PRESS) {
+            // set the start position
+            cursorInNdc(screenX, screenY, screenW, screenH, clickStart.x, clickStart.y);
+            // reset the end position
+            cursorInNdc(screenX, screenY, screenW, screenH, clickEnd.x, clickEnd.y);
+            planePosition = clickStart;
+            planeSpeed = .0f;
+            isClicking = true;
+            wasClicking = true;
+        }
+        else if (action == GLFW_RELEASE) {
+            // update the end position
+            cursorInNdc(screenX, screenY, screenW, screenH, clickEnd.x, clickEnd.y);
+            // Reset the start position
+            //cursorInNdc(screenX, screenY, screenW, screenH, clickStart.x, clickStart.y);
+            isClicking = false;
+        }
     }
 }
 

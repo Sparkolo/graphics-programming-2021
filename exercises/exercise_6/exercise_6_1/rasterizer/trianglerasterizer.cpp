@@ -22,8 +22,10 @@ std::vector<glm::ivec2> triangle_rasterizer::all_pixels()
 {
     std::vector<glm::ivec2> points;
 
-    // TODO
-    std::cout << "triangle_rasterizer::all_pixels(): Not implemented yet!" << std::endl;
+    while (this->more_fragments()) {
+        points.push_back(glm::ivec2(x_current, y_current));
+        this->next_fragment();
+    }
 
     return points;
 }
@@ -42,9 +44,23 @@ bool triangle_rasterizer::more_fragments() const
  */
 void triangle_rasterizer::next_fragment()
 {
-    // TODO
-    std::cout << "triangle_rasterizer::next_fragment(): Not implemented yet!" << std::endl;
-
+    if(x_current < x_stop)
+        x_current += 1;
+    else { // scan line finished, go to next non-empty scan line
+        leftedge.next_fragment();
+        rightedge.next_fragment();
+        while(leftedge.more_fragments() && leftedge.x() >= rightedge.x()) {
+            leftedge.next_fragment();
+            rightedge.next_fragment();
+        }
+        valid = leftedge.more_fragments();
+        if(valid){
+            x_start = leftedge.x();
+            x_stop = rightedge.x() - 1;
+            x_current = x_start;
+            y_current = leftedge.y();
+        }
+    }
 }
 
 /*
@@ -86,9 +102,43 @@ int triangle_rasterizer::y() const
  */
 void triangle_rasterizer::initialize_triangle(int x1, int y1, int x2, int y2, int x3, int y3)
 {
-    // TODO
-    std::cout << "triangle_rasterizer::initialize_triangle(int, int, int, int, int, int): Not implemented yet!" << std::endl;
+    ivertex[0] = glm::ivec2(x1,y1);
+    ivertex[1] = glm::ivec2(x2,y2);
+    ivertex[2] = glm::ivec2(x3,y3);
 
+    lower_left = LowerLeft();
+    upper_left = UpperLeft();
+    the_other = 3 - lower_left - upper_left;
+
+    glm::ivec2 e1(ivertex[upper_left] - ivertex[lower_left]);
+    glm::ivec2 e2(ivertex[the_other] - ivertex[lower_left]);
+
+    int z_e1xe2 = e1.x * e2.y - e1.y * e2.x;
+    if(z_e1xe2 > 0) { // Red triangle case
+        leftedge.init(ivertex[lower_left].x, ivertex[lower_left].y,
+                      ivertex[the_other].x, ivertex[the_other].y,
+                      ivertex[upper_left].x, ivertex[upper_left].y);
+        rightedge.init(ivertex[lower_left].x, ivertex[lower_left].y,
+                      ivertex[upper_left].x, ivertex[upper_left].y);
+    }
+    else if(z_e1xe2 < 0) { // Blue triangle case
+        leftedge.init(ivertex[lower_left].x, ivertex[lower_left].y,
+                      ivertex[upper_left].x, ivertex[upper_left].y);
+        rightedge.init(ivertex[lower_left].x, ivertex[lower_left].y,
+                      ivertex[the_other].x, ivertex[the_other].y,
+                      ivertex[upper_left].x, ivertex[upper_left].y);
+    }
+
+    x_start = leftedge.x();
+    y_start = leftedge.y();
+    x_stop = rightedge.x() - 1;
+    y_stop = ivertex[upper_left].y;
+    x_current = x_start;
+    y_current = y_start;
+
+    valid = x_start <= x_stop;
+    if(!valid)
+        next_fragment();
 }
 
 /*
@@ -98,9 +148,10 @@ void triangle_rasterizer::initialize_triangle(int x1, int y1, int x2, int y2, in
 int triangle_rasterizer::LowerLeft()
 {
     int ll = 0;
-    // TODO
-    std::cout << "triangle_rasterizer::LowerLeft(): Not implemented yet!" << std::endl;
-
+    for(int i=ll+1; i<3; i++) {
+        if(ivertex[i].y < ivertex[ll].y || (ivertex[i].y == ivertex[ll].y && ivertex[i].x < ivertex[ll].x))
+            ll = i;
+    }
     return ll;
 }
 
@@ -111,8 +162,9 @@ int triangle_rasterizer::LowerLeft()
 int triangle_rasterizer::UpperLeft()
 {
     int ul = 0;
-    // TODO
-    std::cout << "triangle_rasterizer::UpperLeft(): Not implemented yet!" << std::endl;
-
+    for(int i=ul+1; i<3; i++) {
+        if(ivertex[i].y > ivertex[ul].y || (ivertex[i].y == ivertex[ul].y && ivertex[i].x < ivertex[ul].x))
+            ul = i;
+    }
     return ul;
 }

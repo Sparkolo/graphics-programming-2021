@@ -24,12 +24,12 @@ float currentTime;
 unsigned int VAO, VBO;                          // vertex array and buffer objects
 const unsigned int vertexBufferSize = 65536;    // # of particles
 
-// TODO 2.2 update the number of attributes in a particle
-const unsigned int particleSize = 2;            // particle attributes
+const unsigned int particleSize = 5;            // particle attributes
 
 const unsigned int sizeOfFloat = 4;             // bytes in a float
 unsigned int particleId = 0;                    // keep track of last particle to be updated
-Shader *shaderProgram;                          // our shader program
+Shader *shaderProgram;                          // our shaders program
+int timeUniformLocation;                        // The location in the shaders program of the current time uniform
 
 int main()
 {
@@ -65,17 +65,16 @@ int main()
         return -1;
     }
 
-    // build and compile our shader program
+    // build and compile our shaders program
     // ------------------------------------
-    shaderProgram = new Shader("shaders/shader.vert", "shaders/shader.frag");
+    shaderProgram = new Shader("shaders/shaders.vert", "shaders/shaders.frag");
+    timeUniformLocation = glGetUniformLocation(shaderProgram->ID, "currentTime");
 
     // NEW!
-    // enable built in variable gl_PointSize in the vertex shader
+    // enable built in variable gl_PointSize in the vertex shaders
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
-    // TODO 2.4 enable alpha blending (for transparency)
-
-
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
 
     createVertexBufferObject();
 
@@ -96,15 +95,12 @@ int main()
         processInput(window);
 
         // set background color and replace frame buffer colors with the clear color
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // set shader program and the uniform value "currentTime"
+        // set shaders program and the uniform value "currentTime"
         shaderProgram->use();
-
-        // TODO 2.3 set uniform variable related to current time
-
-
+        glUniform1f(timeUniformLocation, currentTime);
 
         // render particles
         glBindVertexArray(VAO);
@@ -139,10 +135,15 @@ void bindAttributes(){
     glEnableVertexAttribArray(vertexLocation);
     glVertexAttribPointer(vertexLocation, posSize, GL_FLOAT, GL_FALSE, particleSize * sizeOfFloat, 0);
 
-    // TODO 2.2 set velocity and timeOfBirth shader attributes
+    int velSize = 2; // each velocity has x,y
+    vertexLocation = glGetAttribLocation(shaderProgram->ID, "vel");
+    glEnableVertexAttribArray(vertexLocation);
+    glVertexAttribPointer(vertexLocation, velSize, GL_FLOAT, GL_FALSE, particleSize * sizeOfFloat, (GLvoid*)(posSize * sizeOfFloat));
 
-
-
+    int timeSize = 1;
+    vertexLocation = glGetAttribLocation(shaderProgram->ID, "startTime");
+    glEnableVertexAttribArray(vertexLocation);
+    glVertexAttribPointer(vertexLocation, timeSize, GL_FLOAT, GL_FALSE, particleSize * sizeOfFloat, (GLvoid*)((posSize + velSize) * sizeOfFloat));
 }
 
 void createVertexBufferObject(){
@@ -168,10 +169,9 @@ void emitParticle(float x, float y, float velocityX, float velocityY, float time
     float data[particleSize];
     data[0] = x;
     data[1] = y;
-
-    // TODO 2.2 , add velocity and timeOfBirth to the particle data
-
-
+    data[2] = velocityX;
+    data[3] = velocityY;
+    data[4] = timeOfBirth;
 
     // upload only parts of the buffer
     glBufferSubData(GL_ARRAY_BUFFER, particleId * particleSize * sizeOfFloat, particleSize * sizeOfFloat, data);

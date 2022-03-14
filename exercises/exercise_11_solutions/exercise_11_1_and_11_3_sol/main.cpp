@@ -102,8 +102,8 @@ int main()
     }
 
 
-    // init shaders and models
-    shader = new Shader("shaders/shader.vert", "shaders/shader.frag");
+    // init shaders and resources
+    shader = new Shader("shaders/shaders.vert", "shaders/shaders.frag");
     carPaint = new Model("car/Paint_LOD0.obj");
     carBody = new Model("car/Body_LOD0.obj");
     carWindow = new Model("car/Windows_LOD0.obj");

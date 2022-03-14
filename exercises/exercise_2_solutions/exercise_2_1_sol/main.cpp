@@ -9,7 +9,7 @@
 // https://learnopengl.com/Getting-started/Hello-Triangle (i.e. result from exercise 1.2)
 // to be used as the starting point to implement the following tutorial:
 // https://learnopengl.com/Getting-started/Shaders
-// I created two empty shader files (vertex and fragment) in the "shaders" folder for this activity
+// I created two empty shaders files (vertex and fragment) in the "shaders" folder for this activity
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -51,9 +51,9 @@ int main()
         return -1;
     }
 
-    // build and compile our shader program
+    // build and compile our shaders program
     // ------------------------------------
-    Shader ourShader("shaders/shader.vert", "shaders/shader.frag"); // you can name your shader files however you like
+    Shader ourShader("shaders/shaders.vert", "shaders/shaders.frag"); // you can name your shaders files however you like
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------

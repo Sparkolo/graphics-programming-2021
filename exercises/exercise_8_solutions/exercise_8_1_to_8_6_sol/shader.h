@@ -14,7 +14,7 @@ class Shader
 {
 public:
     unsigned int ID;
-    // constructor generates the shader on the fly
+    // constructor generates the shaders on the fly
     // ------------------------------------------------------------------------
     Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr)
     {
@@ -44,7 +44,7 @@ public:
             // convert stream into string
             vertexCode = vShaderStream.str();
             fragmentCode = fShaderStream.str();
-            // if geometry shader path is present, also load a geometry shader
+            // if geometry shaders path is present, also load a geometry shaders
             if (geometryPath != nullptr)
             {
                 gShaderFile.open(geometryPath);
@@ -62,7 +62,7 @@ public:
         const char * fShaderCode = fragmentCode.c_str();
         // 2. compile shaders
         unsigned int vertex, fragment;
-        // vertex shader
+        // vertex shaders
         vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vShaderCode, NULL);
         glCompileShader(vertex);
@@ -72,7 +72,7 @@ public:
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
         checkCompileErrors(fragment, "FRAGMENT");
-        // if geometry shader is given, compile geometry shader
+        // if geometry shaders is given, compile geometry shaders
         unsigned int geometry;
         if (geometryPath != nullptr)
         {
@@ -82,7 +82,7 @@ public:
             glCompileShader(geometry);
             checkCompileErrors(geometry, "GEOMETRY");
         }
-        // shader Program
+        // shaders Program
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
         glAttachShader(ID, fragment);
@@ -97,7 +97,7 @@ public:
             glDeleteShader(geometry);
 
     }
-    // activate the shader
+    // activate the shaders
     // ------------------------------------------------------------------------
     void use()
     {
@@ -163,7 +163,7 @@ public:
     }
 
 private:
-    // utility function for checking shader compilation/linking errors.
+    // utility function for checking shaders compilation/linking errors.
     // ------------------------------------------------------------------------
     void checkCompileErrors(GLuint shader, std::string type)
     {

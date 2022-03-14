@@ -123,7 +123,7 @@ int main()
         return -1;
     }
 
-    // load the shaders and the 3D models
+    // load the shaders and the 3D resources
     // ----------------------------------
     gouraud_shading = new Shader("shaders/gouraud_shading.vert", "shaders/gouraud_shading.frag");
     phong_shading = new Shader("shaders/phong_shading.vert", "shaders/phong_shading.frag");

@@ -12,7 +12,7 @@ target_include_directories(${subdir} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 ## copy shaders folder to build folder
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-## copy models
+## copy resources
 file(GLOB car_geom "${CMAKE_SOURCE_DIR}/common/models/car/*.obj")
 file(COPY ${car_geom} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/car)
 file(COPY ${CMAKE_SOURCE_DIR}/common/models/floor/floor.obj DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/floor)

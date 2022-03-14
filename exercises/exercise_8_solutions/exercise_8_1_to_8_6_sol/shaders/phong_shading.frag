@@ -23,14 +23,14 @@ uniform float attenuationC0;
 uniform float attenuationC1;
 uniform float attenuationC2;
 
-// TODO exercise 8.4 add the 'in' variables to receive the interpolated Position and Normal from the vertex shader
+// TODO exercise 8.4 add the 'in' variables to receive the interpolated Position and Normal from the vertex shaders
 in vec3 P_frag;
 in vec3 N_frag;
 
 void main()
 {
 
-   // TODO exercise 8.4 - phong shading (i.e. Phong reflection model computed in the fragment shader)
+   // TODO exercise 8.4 - phong shading (i.e. Phong reflection model computed in the fragment shaders)
    // ambient component
    vec3 ambient = ambientLightColor * ambientReflectance * reflectionColor;
    vec4 color = vec4(ambient,1);

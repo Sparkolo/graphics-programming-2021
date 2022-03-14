@@ -7,7 +7,7 @@ layout (location = 2) in float timeOfBirth;
 // TODO 2.3 create and use a float uniform for currentTime
 uniform float currentTime;
 
-// TODO 2.6 create out variable to send the age of the particle to the fragment shader
+// TODO 2.6 create out variable to send the age of the particle to the fragment shaders
 out float elapsedTimeFrag;
 
 const float maxAge = 10.0;
@@ -23,7 +23,7 @@ void main()
         finalPos += velocity * elapsedTime;
     }
 
-    // TODO 2.6 send the age of the particle to the fragment shader using the out variable you have created
+    // TODO 2.6 send the age of the particle to the fragment shaders using the out variable you have created
     elapsedTimeFrag = elapsedTime;
 
     gl_Position = vec4(finalPos, 0.0, 1.0);

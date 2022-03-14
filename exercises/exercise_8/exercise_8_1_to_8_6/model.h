@@ -7,7 +7,7 @@
 
 #include "mesh.h"
 #include "shader.h"
-// NEW! our models are stored in a specific 3D mesh format (i.e. no longer in a header file)
+// NEW! our resources are stored in a specific 3D mesh format (i.e. no longer in a header file)
 //  objloader is used to parse those files
 #include "objloader.h"
 

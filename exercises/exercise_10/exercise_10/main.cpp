@@ -70,7 +70,7 @@ int main()
     }
 
 
-    // load the 3D models
+    // load the 3D resources
     // -----------------
     std::vector<glm::vec3> points;
     std::vector<glm::vec4> colors;

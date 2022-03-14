@@ -9,15 +9,27 @@ uniform mat4 view;  // represents the world coordinates in the camera coord spac
 uniform mat4 projection; // camera projection matrix
 uniform vec3 camPosition; // so we can compute the view vector (could be extracted from view matrix, but let's make our life easier :) )
 
-// send shaded color to the fragment shader
+// send shaded color to the fragment shaders
 out vec4 shadedColor;
 
-// TODO exercise 8 setup the uniform variables needed for lighting
 // light uniform variables
+uniform vec3 ambientLightColor;
+uniform vec3 light1Position;
+uniform vec3 light1Color;
+uniform vec3 light2Position;
+uniform vec3 light2Color;
 
 // material properties
+uniform vec3 objReflectionColor;
+uniform float objAmbientReflectance;
+uniform float objDiffuseReflectance;
+uniform float objSpecularReflectance;
+uniform float objSpecularExponent;
 
 // attenuation uniforms
+uniform float attenuationC0;
+uniform float attenuationC1;
+uniform float attenuationC2;
 
 
 void main() {
@@ -29,18 +41,33 @@ void main() {
    // final vertex transform (for opengl rendering, not for lighting)
    gl_Position = projection * view * P;
 
-   // TODO exercises 8.1, 8.2 and 8.3 - Gouraud shading (i.e. Phong reflection model computed in the vertex shader)
+   vec3 ambient = ambientLightColor * objAmbientReflectance * objReflectionColor;
 
-   // TODO 8.1 ambient
+   vec3 lightDir = normalize(light1Position - P.xyz);
+   float diffCoef = max(dot(N, lightDir), 0.0);
+   vec3 diffuse = diffCoef * light1Color * objDiffuseReflectance * objReflectionColor;
 
-   // TODO 8.2 diffuse
+   vec3 viewDir = normalize(camPosition - P.xyz);
+   vec3 reflectDir = reflect(-lightDir, N);
+   float specCoef = pow(max(dot(viewDir, reflectDir), 0.0), objSpecularExponent);
+   vec3 specular = specCoef * objSpecularReflectance * light1Color;
 
-   // TODO 8.3 specular
+   float distance = length(light1Position - P.xyz);
+   float attenuation = max(1.0 / (attenuationC0 + attenuationC1 * distance + attenuationC2 * distance * distance), 1.0);
+   vec3 diffSpecLights = (diffuse + specular) * attenuation;
 
-   // TODO exercise 8.6 - attenuation - light 1
+   lightDir = normalize(light2Position - P.xyz);
+   diffCoef = max(dot(N, lightDir), 0.0);
+   diffuse = diffCoef * light2Color * objDiffuseReflectance * objReflectionColor;
 
+   reflectDir = reflect(-lightDir, N);
+   specCoef = pow(max(dot(viewDir, reflectDir), 0.0), objSpecularExponent);
+   specular = specCoef * objSpecularReflectance * light2Color;
 
-   // TODO set the output color to the shaded color that you have computed
-   shadedColor = vec4(.8, .8, .8, 1.0);
+   distance = length(light2Position - P.xyz);
+   attenuation = max(1.0 / (attenuationC0 + attenuationC1 * distance + attenuationC2 * distance * distance), 1.0);
+   diffSpecLights += (diffuse + specular) * attenuation;
+
+   shadedColor = vec4(ambient + diffSpecLights, 1.0);
 
 }

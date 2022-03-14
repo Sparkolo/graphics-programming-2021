@@ -86,9 +86,9 @@ int main()
         return -1;
     }
 
-    // build and compile our shader program
+    // build and compile our shaders program
     // ------------------------------------
-    shaderProgram = new Shader("shaders/shader.vert", "shaders/shader.frag");
+    shaderProgram = new Shader("shaders/shaders.vert", "shaders/shaders.frag");
 
     // the model was originally baked with lights for a left handed coordinate system, we are "fixing" the z-coordinate
     // so we can work with a right handed coordinate system
@@ -154,7 +154,7 @@ int main()
 void drawPlane(){
     // TODO 3.all create and apply your transformation matrices here
     //  you will need to transform the pose of the pieces of the plane by manipulating glm matrices and uploading a
-    //  uniform mat4 model matrix to the vertex shader
+    //  uniform mat4 model matrix to the vertex shaders
 
     // rotation matrix based on current planeRotation
     glm::mat4 rotation = glm::rotateZ(planeHeading);
@@ -249,13 +249,13 @@ unsigned int createVertexArray(std::vector<float> &positions, std::vector<float>
     // bind vertex array object
     glBindVertexArray(VAO);
 
-    // set vertex shader attribute "pos"
+    // set vertex shaders attribute "pos"
     createArrayBuffer(positions); // creates and bind  the VBO
     int posAttributeLocation = glGetAttribLocation(shaderProgram->ID, "pos");
     glEnableVertexAttribArray(posAttributeLocation);
     glVertexAttribPointer(posAttributeLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    // set vertex shader attribute "color"
+    // set vertex shaders attribute "color"
     createArrayBuffer(colors); // creates and bind the VBO
     int colorAttributeLocation = glGetAttribLocation(shaderProgram->ID, "color");
     glEnableVertexAttribArray(colorAttributeLocation);

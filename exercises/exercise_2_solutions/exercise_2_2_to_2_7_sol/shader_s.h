@@ -9,15 +9,15 @@
 #include <iostream>
 
 /// Shader class from https://learnopengl.com
-/// https://learnopengl.com/code_viewer_gh.php?code=includes/learnopengl/shader.h
-/// modified to store the shader on memory, and permit editing and recompilation at runtime
+/// https://learnopengl.com/code_viewer_gh.php?code=includes/learnopengl/shaders.h
+/// modified to store the shaders on memory, and permit editing and recompilation at runtime
 
 
 class Shader
 {
 public:
     unsigned int ID;
-    // constructor generates the shader on the fly
+    // constructor generates the shaders on the fly
     // ------------------------------------------------------------------------
     Shader(const char* vertexPath, const char* fragmentPath)
     {
@@ -53,7 +53,7 @@ public:
         const char * fShaderCode = fragmentCode.c_str();
         // 2. compile shaders
         unsigned int vertex, fragment;
-        // vertex shader
+        // vertex shaders
         vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vShaderCode, NULL);
         glCompileShader(vertex);
@@ -63,7 +63,7 @@ public:
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
         checkCompileErrors(fragment, "FRAGMENT");
-        // shader Program
+        // shaders Program
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
         glAttachShader(ID, fragment);
@@ -73,7 +73,7 @@ public:
         glDeleteShader(vertex);
         glDeleteShader(fragment);
     }
-    // activate the shader
+    // activate the shaders
     // ------------------------------------------------------------------------
     void use()
     {
@@ -97,7 +97,7 @@ public:
     }
 
 private:
-    // utility function for checking shader compilation/linking errors.
+    // utility function for checking shaders compilation/linking errors.
     // ------------------------------------------------------------------------
     void checkCompileErrors(unsigned int shader, std::string type)
     {

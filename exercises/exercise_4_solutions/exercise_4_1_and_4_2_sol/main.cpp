@@ -194,7 +194,7 @@ void drawArrow(){
 
     // set scale matrix
     glm::mat4 scale = glm::scale(.1f, glm::length(clickDiff), 1.0f);
-    // set shader "model" matrix
+    // set shaders "model" matrix
     shaderProgram->setMat4("model", position * rotation * scale);
 
     arrow.drawSceneObject();
@@ -305,7 +305,7 @@ void drawPlane(){
 
 void setup(){
     // initialize shaders
-    shaderProgram = new Shader("shaders/shader.vert", "shaders/shader.frag");
+    shaderProgram = new Shader("shaders/shaders.vert", "shaders/shaders.frag");
 
     PlaneModel& airplane = PlaneModel::getInstance();
     // initialize plane body mesh objects
@@ -341,13 +341,13 @@ unsigned int createVertexArray(const std::vector<float> &positions, const std::v
     // bind vertex array object
     glBindVertexArray(VAO);
 
-    // set vertex shader attribute "pos"
+    // set vertex shaders attribute "pos"
     createArrayBuffer(positions); // creates and bind  the VBO
     int posAttributeLocation = glGetAttribLocation(shaderProgram->ID, "pos");
     glEnableVertexAttribArray(posAttributeLocation);
     glVertexAttribPointer(posAttributeLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    // set vertex shader attribute "color"
+    // set vertex shaders attribute "color"
     createArrayBuffer(colors); // creates and bind the VBO
     int colorAttributeLocation = glGetAttribLocation(shaderProgram->ID, "color");
     glEnableVertexAttribArray(colorAttributeLocation);

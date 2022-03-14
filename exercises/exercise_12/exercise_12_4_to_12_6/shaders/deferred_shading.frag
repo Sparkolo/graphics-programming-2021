@@ -37,22 +37,47 @@ void main()
    vec2 up = vec2(0.0, texelSize.y);
    vec2 right = vec2(texelSize.x, 0.0);
 
-   // more about convolution kernels
+   // Convolution kernels
    // https://en.wikipedia.org/wiki/Kernel_(image_processing)
-   // TODO ex 12.5 implement a sharpen filter to the diffuse and specular information of the gBuffer
+   // sharpen filter to the diffuse and specular information of the gBuffer
    if (sharpen){
       // sharpen filter
-      // should apply on samples from gAlbedoSpec texture
-      vec4 sharp = vec4(Diffuse, Specular);
+      vec4 sharp = -texture(gAlbedoSpec, TexCoords + up).rgba
+      -texture(gAlbedoSpec, TexCoords - up).rgba
+      -texture(gAlbedoSpec, TexCoords + right).rgba
+      -texture(gAlbedoSpec, TexCoords + right).rgba
+      + 5.0 * (vec4(Diffuse, Specular - specularOffset)); // already sampled at the center
+
       Diffuse = sharp.rgb;
       Specular = sharp.a + specularOffset;
+
+      /******* Method with for loops, less efficient
+      Diffuse *= 5.0;
+      Specular *= 5.0;
+      for(int i=-1; i<2; i++) {
+         for(int j=-1; j<2; j++) {
+            vec2 offset = vec2(i,j) * texelSize;
+
+            float weight = abs(i) != abs(j) ? -1.0 : 0.0;
+
+            Diffuse += weight * texture(gAlbedoSpec, TexCoords + offset).rgb;
+            Specular += weight * (texture(gAlbedoSpec, TexCoords + offset).a + specularOffset);
+         }
+      }*/
    }
 
-   // TODO ex 12.6 implement an edge detection filter to the diffuse and specular information of the gBuffer
+   // edge detection filter to the diffuse and specular information of the gBuffer
    if (edgeDetection){
       // laplacian operator
-      // should apply on samples from gNormal
-      float flatness = 1.0;// value in the range [0, 1], bigger values indicate less curvature
+      vec3 laplacian = texture(gNormal, TexCoords + up).rgb
+                        + texture(gNormal, TexCoords - up).rgb
+                        + texture(gNormal,TexCoords + right).rgb
+                        + texture(gNormal, TexCoords - right).rgb
+                        - 4.0 * Normal; // already sampled at the center
+
+      // value in the range [0, 1], bigger values indicate less curvature
+      float flatness = 1.0 - clamp(length(laplacian), 0.0, 1.0);
+
       Diffuse *= flatness;
       Specular *= flatness;
    }
@@ -63,12 +88,24 @@ void main()
       // calculate lighting
       lighting = Diffuse * 0.1; // hard-coded ambient component
 
-      // TODO ex 12.4 compute the diffuse and specular components of the blinn-phong reflection model and
-      //  distance attenuation for all lights in the scene.
-      // You will need to iterate all lights (NR_LIGHTS), use forward_shading.frag as a reference.
-      // Notice that all lights are point lights and that all information is in world coordinates
-      // Forward and deferred shading should look identical after you implement lighting.
+      vec3 viewDir  = normalize(viewPos - FragPos);
 
+      for (int i = 0; i < NR_LIGHTS; ++i)
+      {
+         // diffuse
+         vec3 lightDir = normalize(lights[i].Position - FragPos);
+         vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Diffuse * lights[i].Color;
+         // specular
+         vec3 halfwayDir = normalize(lightDir + viewDir);
+         float spec = pow(max(dot(Normal, halfwayDir), 0.0), 64.0);
+         vec3 specular = lights[i].Color * spec * Specular;
+         // attenuation
+         float distance = length(lights[i].Position - FragPos);
+         float attenuation = 1.0 / (lights[i].Constant + lights[i].Linear * distance + lights[i].Quadratic * distance * distance);
+         diffuse *= attenuation;
+         specular *= attenuation;
+         lighting += diffuse + specular;
+      }
 
    }
 

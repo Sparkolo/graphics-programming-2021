@@ -48,6 +48,10 @@ const unsigned int SCR_HEIGHT = 600;
 // global variables used for rendering
 // -----------------------------------
 SceneObject cube;
+SceneObject planeBody;
+SceneObject planeWing;
+SceneObject planePropeller;
+SceneObject planeArrow;
 Shader* shaderProgram;
 
 // global variables used for control
@@ -145,6 +149,28 @@ int main()
     return 0;
 }
 
+glm::vec3 shoemakeMap(glm::vec2 screenPos, float radius) {
+    float xSquare = screenPos.x * screenPos.x;
+    float ySquare = screenPos.y * screenPos.y;
+    float rSquare = radius * radius;
+
+    if (xSquare + ySquare > rSquare)
+        return (radius / glm::sqrt(xSquare + ySquare)) * glm::vec3(screenPos, .0f);
+    else
+        return glm::vec3(screenPos, glm::sqrt(rSquare-xSquare-ySquare));
+}
+
+glm::vec3 andersonMap(glm::vec2 screenPos, float radius) {
+    float xSquare = screenPos.x * screenPos.x;
+    float ySquare = screenPos.y * screenPos.y;
+    float rSquare = radius * radius;
+
+    if (xSquare + ySquare > rSquare / 2.0f)
+        return glm::vec3(screenPos, rSquare / (2.0f * sqrt(xSquare + ySquare)));
+    else
+        return glm::vec3(screenPos, glm::sqrt(rSquare-xSquare-ySquare));
+}
+
 glm::mat4 trackballRotation(){
     glm::vec2 mouseVec =clickStart-clickEnd;
     if (glm::length(mouseVec) < 1.e-5f)
@@ -152,31 +178,22 @@ glm::mat4 trackballRotation(){
 
     float dotProd = 0;
     float angle = 0;
-    glm::vec3 u;
-    glm::vec3 crossProd;
+    glm::vec3 pStart, pEnd;
+    glm::vec3 crossProd, u;
     float r = 1.0f; // trackball radius
 
-    // TODO 4.3 - implement the trackball rotations here
+    pStart = g_andersonTrackball ? andersonMap(clickStart, r) : shoemakeMap(clickStart, r);
+    pEnd = g_andersonTrackball ? andersonMap(clickEnd, r) : shoemakeMap(clickEnd, r);
 
-    // TODO - prepare the values you will use for the trackball
+    dotProd = glm::dot(pStart, pEnd);
+    crossProd = glm::cross(pStart, pEnd);
+    u = crossProd / glm::length(crossProd);
 
-
-    if(g_andersonTrackball) {
-        // TODO - Anderson trackball
-
-    }
-    else {
-        // TODO - Shoemake trackball
-
-    }
-
-    // TODO - compute rotation axis and rotation angle,
-    //  can use the same code for both trackball implementations
-
+    angle = glm::atan(glm::length(crossProd), dotProd);
 
     // correction to the rotation angle
     // - not needed when we use atan with two parameters (atan2)
-    angle += dotProd < 0.f ? glm::pi<float>() : 0.f;
+    //angle += dotProd < 0.f ? glm::pi<float>() : 0.f;
 
     // we (finally) set the rotation!
     glm::mat4 rotation = glm::rotate(abs(angle), u);
@@ -191,22 +208,51 @@ void drawObject(){
     glm::mat4 model = trackballRotation() * storedRotation;
 
     // scale the cube to half the size (not needed for the plane)
-    glm::mat4 scale = glm::scale(.5f, .5f, .5f);
+    //glm::mat4 scale = glm::scale(.5f, .5f, .5f);
 
     // draw cube
-    shaderProgram->setMat4("model", model * scale);
-    cube.drawSceneObject();
+    //shaderProgram->setMat4("model", model * scale);
+    //cube.drawSceneObject();
 
-    // TODO 4.4 - replace the cube with the plane from exercise 4.1/4.2
+    // draw plane body and right wing
+    shaderProgram->setMat4("model", model);
+    planeBody.drawSceneObject();
+    planeWing.drawSceneObject();
 
+    // propeller,
+    // half size -> make perpendicular to plane forward axis -> rotate around plane forward axis -> move to the tip of the plane
+    glm::mat4 propeller = model * glm::translate(.0f, .5f, .0f) *
+                          glm::rotate(currentTime * 10.0f, glm::vec3(0.0,1.0,0.0)) *
+                          glm::rotate(glm::half_pi<float>(), glm::vec3(1.0,0.0,0.0)) *
+                          glm::scale(.5f, .5f, .5f);
 
+    shaderProgram->setMat4("model", propeller);
+    planePropeller.drawSceneObject();
+
+    // right wing back,
+    // half size -> move to the back
+    glm::mat4 wingRightBack = model * glm::translate(0.0f, -0.5f, 0.0f) * glm::scale(.5f,.5f,.5f);
+    shaderProgram->setMat4("model", wingRightBack);
+    planeWing.drawSceneObject();
+
+    // left wing,
+    // mirror in x
+    glm::mat4 wingLeft = model * glm::scale(-1.0f, 1.0f, 1.0f);
+    shaderProgram->setMat4("model", wingLeft);
+    planeWing.drawSceneObject();
+
+    // left wing back,
+    // half size + mirror in x -> move to the back
+    glm::mat4 wingLeftBack =  model *  glm::translate(0.0f, -0.5f, 0.0f) * glm::scale(-.5f,.5f,.5f);
+    shaderProgram->setMat4("model", wingLeftBack);
+    planeWing.drawSceneObject();
 }
 
 
 
 void setup(){
     // initialize shaders
-    shaderProgram = new Shader("shader.vert", "shader.frag");
+    shaderProgram = new Shader("shaders/shaders.vert", "shaders/shaders.frag");
 
     Primitives& primitives = Primitives::getInstance();
     cube.VAO = createVertexArray(primitives.cubeVertices,
@@ -214,9 +260,24 @@ void setup(){
                                  primitives.cubeIndices);
     cube.vertexCount = primitives.cubeIndices.size();
 
-    // TODO 4.4 - initialize the airplane parts
+    PlaneModel& airplane = PlaneModel::getInstance();
+    // initialize plane body mesh objects
+    planeBody.VAO = createVertexArray(airplane.planeBodyVertices,
+                                      airplane.planeBodyColors,
+                                      airplane.planeBodyIndices);
+    planeBody.vertexCount = airplane.planeBodyIndices.size();
 
+    // initialize plane wing mesh objects
+    planeWing.VAO = createVertexArray(airplane.planeWingVertices,
+                                      airplane.planeWingColors,
+                                      airplane.planeWingIndices);
+    planeWing.vertexCount = airplane.planeWingIndices.size();
 
+    // initialize plane wing mesh objects
+    planePropeller.VAO = createVertexArray(airplane.planePropellerVertices,
+                                           airplane.planePropellerColors,
+                                           airplane.planePropellerIndices);
+    planePropeller.vertexCount = airplane.planePropellerIndices.size();
 }
 
 
@@ -226,13 +287,13 @@ unsigned int createVertexArray(const std::vector<float> &positions, const std::v
     // bind vertex array object
     glBindVertexArray(VAO);
 
-    // set vertex shader attribute "pos"
+    // set vertex shaders attribute "pos"
     createArrayBuffer(positions); // creates and bind the VBO
     int posAttributeLocation = glGetAttribLocation(shaderProgram->ID, "pos");
     glEnableVertexAttribArray(posAttributeLocation);
     glVertexAttribPointer(posAttributeLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    // set vertex shader attribute "color"
+    // set vertex shaders attribute "color"
     createArrayBuffer(colors); // creates and bind the VBO
     int colorAttributeLocation = glGetAttribLocation(shaderProgram->ID, "color");
     glEnableVertexAttribArray(colorAttributeLocation);

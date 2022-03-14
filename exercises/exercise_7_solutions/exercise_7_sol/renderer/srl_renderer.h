@@ -64,17 +64,17 @@ namespace srl {
         // generate the fragments, with final window pixel locations, used to render the primitives
         virtual void rasterPrimitives(std::vector<fragment> &outFrs) = 0;
 
-        // perform vertex operations in the vertex stream (i.e. the equivalent to a vertex shader)
+        // perform vertex operations in the vertex stream (i.e. the equivalent to a vertex shaders)
         static void processVertices(const glm::mat4 &mvp, std::vector<vertex> &vInOut) {
             for (auto &vtx : vInOut){
-                // this is the equivalent to a vertex shader
+                // this is the equivalent to a vertex shaders
                 vtx.pos = mvp * vtx.pos;
             }
         }
 
-        // perform fragment operations in the fragment stream (i.e. fragment shader)
+        // perform fragment operations in the fragment stream (i.e. fragment shaders)
         static void processFragments(std::vector<fragment>& fInOut) {
-            // fragment shader - not necessary for now since we are not modifying the color
+            // fragment shaders - not necessary for now since we are not modifying the color
             for (auto &frg : fInOut){
                 // example: uncomment this to make all fragments darker
                 // frg.col = frg.col * 0.5f;

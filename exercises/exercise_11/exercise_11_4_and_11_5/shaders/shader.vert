@@ -26,21 +26,20 @@ uniform vec3 viewPosition;
 
 
 void main() {
-   // send text coord to fragment shader
+   // send text coord to fragment shaders
    vs_out.textCoord = textCoord;
 
-   // vertex normal in world space
-   vec3 N = normalize(modelInvTra * normal);
-
    // TODO exercise 10.4 compute the TBN matrix, which maps from world space to Tangent space
-   //  notice that tangent and bitangent are given as vertex properties
-   //  try to ensure that the 3 vectors you use to define TBN are perpecndicular
-   mat3 TBN =  mat3(1);
+   vec3 N = normalize(modelInvTra * normal); // vertex normal in world space
+   vec3 T = normalize(modelInvTra * tangent);
+   // T = normalize(T - dot(T, N) * N); // this would allow me to know that T is laying in a plane with no N component for sure
+   vec3 B = normalize(modelInvTra * bitangent);
+   //vec3 B = cross(T, N); // this would spare me using another matrix multiplication if T and B are perpendicular already
+   mat3 TBN = transpose(mat3(T, B, N)); // transpose to invert the matrix (from tangent->world to world->tangent)
 
-
-   // variables we wanna send to the fragment shader
+   // variables we wanna send to the fragment shaders
    // inverse of TBN, to map from tangent space to world space (needed for reflections)
-   vs_out.invTBN = inverse(TBN);
+   vs_out.invTBN = transpose(TBN);
    // light direction, view position, vertex position, and normal in tangent space
    vs_out.LightDir_tangent = TBN * lightDirection;
    vs_out.CamPos_tangent = TBN * viewPosition;

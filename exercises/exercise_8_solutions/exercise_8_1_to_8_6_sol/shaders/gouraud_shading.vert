@@ -9,7 +9,7 @@ uniform mat4 view;  // represents the world coordinates in the camera coord spac
 uniform mat4 projection; // camera projection matrix
 uniform vec3 camPosition; // so we can compute the view vector (could be extracted from view matrix, but let's make our life easier :) )
 
-// send shaded color to the fragment shader
+// send shaded color to the fragment shaders
 out vec4 shadedColor;
 
 // TODO exercise 8 setup the uniform variables needed for lighting
@@ -39,7 +39,7 @@ void main() {
    // final vertex transform (for opengl rendering, not for lighting)
    gl_Position = projection * view * P;
 
-   // TODO exercises 8.1, 8.2 and 8.3 - Gouraud shading (i.e. Phong reflection model computed in the vertex shader)
+   // TODO exercises 8.1, 8.2 and 8.3 - Gouraud shading (i.e. Phong reflection model computed in the vertex shaders)
 
    // TODO 8.1 ambient
    vec3 ambient = ambientLightColor * ambientReflectance * reflectionColor;

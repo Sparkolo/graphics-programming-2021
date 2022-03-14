@@ -61,3 +61,7 @@ ENDIF()
 IF(EXISTS ${CMAKE_SOURCE_DIR}/assignments)
     add_subdirectory(${CMAKE_SOURCE_DIR}/assignments)
 ENDIF()
+
+IF(EXISTS ${CMAKE_SOURCE_DIR}/pbr-project-algi)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/pbr-project-algi)
+ENDIF()

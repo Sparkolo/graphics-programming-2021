@@ -55,15 +55,23 @@ namespace rt{
             //  all intersection computations should happen in the same space, no matter what that space is)
             //  - create a ray with the camera origin, and the vector from the camera origin to the pixel you have just found
             //  - call the TraceRay method using that ray, and store the resulting color in the frame buffer (fb)
-            fb.paintAt(fb.W/2, fb.H/2, toRGBA32(white));
-
+            for (int c=0; c<fb.W; c++) {
+                for(int r=0; r<fb.H; r++) {
+                    vec2 pixel_offset = vec2((float)c, (float)r) * pixel_size;
+                    vec4 pixel_pos_camspace = lower_left_corner + vec4(pixel_offset, 0.0f, 0.0f);
+                    vec4 pixel_pos_modelspace = view_to_model * pixel_pos_camspace;
+                    Ray ray(cam_pos, glm::normalize(pixel_pos_modelspace - cam_pos));
+                    color rayColor = TraceRay(ray,depth,vts);
+                    fb.paintAt(c, r, toRGBA32(rayColor));
+                }
+            }
         }
 
 
         color TraceRay(const Ray & ray,
                        unsigned int depth,
                        const std::vector<vertex> &vts){
-            // this is here to ensure we don't end up with a long recurssion that can freeze the program (or a stack overflow)
+            // this is here to ensure we don't end up with a long recursion that can freeze the program (or a stack overflow)
             depth = depth > max_recursion ? max_recursion : depth;
 
             color col = black; // used to output a color
@@ -72,16 +80,45 @@ namespace rt{
 
 
             // TODO ex 10.2 replace the current i_normal and i_col computation with their interpolated versions
-            vec3 i_normal = vts[hitInfo.hit_ID].norm;
-            color i_col = vts[hitInfo.hit_ID].col;
+            vec3 i_normal = glm::normalize(hitInfo.barycentric.x * vts[hitInfo.hit_ID].norm +
+                                              hitInfo.barycentric.y * vts[hitInfo.hit_ID+1].norm +
+                                              hitInfo.barycentric.z * vts[hitInfo.hit_ID+2].norm);
+            color i_col = hitInfo.barycentric.x * vts[hitInfo.hit_ID].col +
+                          hitInfo.barycentric.y * vts[hitInfo.hit_ID+1].col +
+                          hitInfo.barycentric.z * vts[hitInfo.hit_ID+2].col;
 
             vec3 i_pos = ray.origin + ray.direction * hitInfo.dist;
 
 
             // TODO ex 10.3 implement the phong reflection model for the point light below
+            // Material properties
+            float ambientMat = 0.2f, diffuseMat = 0.5f, specularMat = 0.5f, shininessMat = 10;
             vec3 light_pos(0,1.9f,0); // light position in model space
-            col = i_col; // set the light reflection color here
+            vec4 lightColor(1.0f, 1.0, 1.0f, 1.0f);
+            vec3 lightDir = glm::normalize(light_pos - i_pos);
 
+            // Ambient component
+            col = ambientMat * i_col;
+
+            // TODO ex 10.4 shadow occlusion
+            // Shadow calculation
+            Ray shadowFeeler(i_pos + i_normal * 0.001f, lightDir);
+            float light_dist = length(light_pos - i_pos);
+            Hit shadowHit;
+            if(RayModelIntersection(shadowFeeler, vts, shadowHit)) {
+                if(shadowHit.dist > light_dist) {
+                    // Diffuse component
+                    float diffCoef = glm::max(glm::dot(i_normal,lightDir), 0.0f);
+                    color diffuse = diffuseMat * diffCoef * lightColor * i_col;
+
+                    // Specular component
+                    vec3 reflectDir = glm::reflect(-lightDir, i_normal);
+                    float specCoef = glm::pow(glm::max(glm::dot(i_normal,lightDir), 0.0f), shininessMat);
+                    color specular = specularMat * specCoef * lightColor;
+
+                    col += diffuse + specular;
+                }
+            }
 
             // the recursion/reflection happens here!
             if (depth > 1) {

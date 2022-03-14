@@ -26,7 +26,7 @@ uniform vec3 viewPosition;
 
 
 void main() {
-   // send text coord to fragment shader
+   // send text coord to fragment shaders
    vs_out.textCoord = textCoord;
 
    // vertex normal in world space
@@ -41,7 +41,7 @@ void main() {
    mat3 TBN =  transpose(mat3(T, B, N)); // we transpose because we want T, B and N to be the rows of the matrix, not the columns
 
 
-   // variables we wanna send to the fragment shader
+   // variables we wanna send to the fragment shaders
    // inverse of TBN, to map from tangent space to world space (needed for reflections)
    vs_out.invTBN = transpose(TBN);
    // light direction, view position, vertex position, and normal in tangent space

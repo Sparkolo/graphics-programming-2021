@@ -123,7 +123,7 @@ int main()
         return -1;
     }
 
-    // load the shaders and the 3D models
+    // load the shaders and the 3D resources
     // ----------------------------------
     gouraud_shading = new Shader("shaders/gouraud_shading.vert", "shaders/gouraud_shading.frag");
     phong_shading = new Shader("shaders/phong_shading.vert", "shaders/phong_shading.frag");
@@ -260,11 +260,23 @@ void drawObjects(){
 
     // TODO exercise 8 - set the missing uniform variables here
     // light uniforms
+    shader->setVec3("ambientLightColor", config.ambientLightColor * config.ambientLightIntensity);
+    shader->setVec3("light1Position", config.light1Position);
+    shader->setVec3("light1Color", config.light1Color * config.light1Intensity);
+    shader->setVec3("light2Position", config.light2Position);
+    shader->setVec3("light2Color", config.light2Color * config.light2Intensity);
 
     // material uniforms
+    shader->setVec3("objReflectionColor", config.reflectionColor);
+    shader->setFloat("objAmbientReflectance", config.ambientReflectance);
+    shader->setFloat("objDiffuseReflectance", config.diffuseReflectance);
+    shader->setFloat("objSpecularReflectance", config.specularReflectance);
+    shader->setFloat("objSpecularExponent", config.specularExponent);
 
     // attenuation uniforms
-
+    shader->setFloat("attenuationC0", config.attenuationC0);
+    shader->setFloat("attenuationC1", config.attenuationC1);
+    shader->setFloat("attenuationC2", config.attenuationC2);
 
 
     // the typical transformation uniforms are already set for you, these are:
@@ -323,7 +335,7 @@ void drawObjects(){
 
     // draw floor,
     // NEW! notice that we overwrite the value of one of the uniform variables to set a different floor color
-    shader->setVec3("reflectionColor", .2, .5, .2);
+    shader->setVec3("objReflectionColor", .2, .5, .2);
     model = glm::scale(glm::mat4(1.0), glm::vec3(5.f, 5.f, 5.f));
     shader->setMat4("model", model);
     invTransposeModel = glm::inverse(glm::transpose(model));

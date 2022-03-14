@@ -25,8 +25,8 @@ int x_2  = max_W * .9, y_2  = max_H * .8;
 int x_3  = max_W * .4, y_3  = max_H * .7;
 
 
-bool showTriangleLines = true;
-bool showTriangleFill = false;
+bool showTriangleLines = false;
+bool showTriangleFill = true;
 
 int main()
 {

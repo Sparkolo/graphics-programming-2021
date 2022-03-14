@@ -14,7 +14,7 @@ uniform mat4 projection;
 
 void main()
 {
-   // we send the normal and position to the fragment shader in WORLD space
+   // we send the normal and position to the fragment shaders in WORLD space
    vout.normal = mat3(modelInvT) * normal;
    vout.position = vec3(model * vec4(position, 1.0));
    // this is just the usual

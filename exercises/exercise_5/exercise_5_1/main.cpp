@@ -209,19 +209,12 @@ glm::mat4 trackballRotation(){
 glm::mat4 viewProjection(){
 
     if (g_perspectiveProjection) {
-        // TODO 5.1 - create a view matrix, that transforms points in the world coordinates to the camera coordinates
-        //  you can use glm::lookat for that, set position to (0,0,2) and the camera forward to (0,0,-1)
+        glm::mat4 view = glm::lookAt(glm::vec3(0,0,2),glm::vec3(0,0,-1),glm::vec3(0,1,0));
 
+        int xScreen, yScreen;
+        glm::mat4 proj = glm::perspectiveFov(glm::radians(70.f), (float)SCR_WIDTH, (float)SCR_HEIGHT, 0.1f, 10.f);
 
-        // TODO 5.1 - create a projection using the glm::perspectiveFov function,
-        //  and use it to view the object (i.e. multiply with model)
-
-
-        // TODO 5.1 - multiply the matrices together in the right order to return the viewprojection matrix,
-        //  you want the final matrix to first move points into camera coordinates, and then project
-        //  press 6 to see the result
-
-        return glm::mat4(1);
+        return proj * view;
     }
     else {
         // ortographic in the ndc range
@@ -288,7 +281,7 @@ void drawObject(){
 
 void setup(){
     // initialize shaders
-    shaderProgram = new Shader("shaders/shader.vert", "shaders/shader.frag");
+    shaderProgram = new Shader("shaders/shaders.vert", "shaders/shaders.frag");
 
     cube.VAO = createVertexArray(cubeVertices, cubeColors, cubeIndices);
     cube.vertexCount = cubeIndices.size();
@@ -310,13 +303,13 @@ unsigned int createVertexArray(const std::vector<float> &positions, const std::v
     // bind vertex array object
     glBindVertexArray(VAO);
 
-    // set vertex shader attribute "pos"
+    // set vertex shaders attribute "pos"
     createArrayBuffer(positions); // creates and bind the VBO
     int posAttributeLocation = glGetAttribLocation(shaderProgram->ID, "pos");
     glEnableVertexAttribArray(posAttributeLocation);
     glVertexAttribPointer(posAttributeLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    // set vertex shader attribute "color"
+    // set vertex shaders attribute "color"
     createArrayBuffer(colors); // creates and bind the VBO
     int colorAttributeLocation = glGetAttribLocation(shaderProgram->ID, "color");
     glEnableVertexAttribArray(colorAttributeLocation);

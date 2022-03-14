@@ -49,7 +49,7 @@ unsigned int gPosition, gNormal, gAlbedoSpec;
 Shader* shaderGeometryPass;
 Shader* shaderLightingPass;
 Shader* shaderLightBox;
-// version of the shader using a forward pass, for the sake of comparison
+// version of the shaders using a forward pass, for the sake of comparison
 Shader* shaderForwardShading;
 
 // global variables used for control
@@ -127,7 +127,7 @@ int main()
     }
 
 
-    // init shaders and models
+    // init shaders and resources
 	carPaint = new Model("car/Paint_LOD0.obj");
 	carBody = new Model("car/Body_LOD0.obj");
 	carLight = new Model("car/Light_LOD0.obj");
@@ -205,7 +205,7 @@ int main()
         config.lightColors.push_back(col);
     }
 
-    // shader configuration
+    // shaders configuration
     // --------------------
     shaderLightingPass->use();
     shaderLightingPass->setInt("gPosition", 0);
@@ -319,7 +319,7 @@ void renderScene(GLFWwindow* window){
                                          lightRotationM3 * config.lightPositions[i]);
             shaderForwardShading->setVec3("lights[" + std::to_string(i) + "].Color", config.lightColors[i]);
             // update attenuation parameters and calculate radius
-            // note that we don't send this to the shader, we assume it is always 1.0 (in our case)
+            // note that we don't send this to the shaders, we assume it is always 1.0 (in our case)
             shaderForwardShading->setFloat("lights[" + std::to_string(i) + "].Constant", config.attenuationConstant);
             shaderForwardShading->setFloat("lights[" + std::to_string(i) + "].Linear", config.attenuationLinear);
             shaderForwardShading->setFloat("lights[" + std::to_string(i) + "].Quadratic",
@@ -373,7 +373,7 @@ void renderScene(GLFWwindow* window){
                                        lightRotationM3 * config.lightPositions[i]);
             shaderLightingPass->setVec3("lights[" + std::to_string(i) + "].Color", config.lightColors[i]);
             // update attenuation parameters and calculate radius
-            // note that we don't send this to the shader, we assume it is always 1.0 (in our case)
+            // note that we don't send this to the shaders, we assume it is always 1.0 (in our case)
             shaderLightingPass->setFloat("lights[" + std::to_string(i) + "].Constant", config.attenuationConstant);
             shaderLightingPass->setFloat("lights[" + std::to_string(i) + "].Linear", config.attenuationLinear);
             shaderLightingPass->setFloat("lights[" + std::to_string(i) + "].Quadratic", config.attenuationQuadratic);
@@ -394,7 +394,7 @@ void renderScene(GLFWwindow* window){
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
         // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
         // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the
-        // depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
+        // depth buffer in another shaders stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
         int width, height;
         glfwGetFramebufferSize(window,&width, &height);
         glBlitFramebuffer(0, 0, glfw_width, glfw_height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT,

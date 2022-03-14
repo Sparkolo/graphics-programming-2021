@@ -8,9 +8,8 @@ uniform mat4 view;  // represents the world coordinates in the camera coord spac
 uniform mat4 invTranspModel; // inverse of the transpose of model (used to multiply vectors while preserving angles)
 uniform mat4 projection; // camera projection matrix
 
-// TODO exercise 8.4 - make the 'out' variables that will be used in the fragment shader
-
-
+out vec3 P_frag; // world space position for lighting computation
+out vec3 N_frag; // world space normal for lighting computation
 
 void main() {
    // vertex in world space (for lighting computation)
@@ -18,9 +17,8 @@ void main() {
    // normal in world space (for lighting computation)
    vec3 N = normalize((invTranspModel * vec4(normal, 0.0)).xyz);
 
-   // TODO 8.4 pass the positions in world space to the fragment shader
-
-
+   P_frag = P.xyz;
+   N_frag = N;
 
    // final vertex position (for opengl rendering, not for lighting)
    gl_Position = projection * view * P;

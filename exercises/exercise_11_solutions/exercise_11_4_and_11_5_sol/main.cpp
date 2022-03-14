@@ -119,8 +119,8 @@ int main()
     }
 
 
-    // init shaders and models
-	shader = new Shader("shaders/shader.vert", "shaders/shader.frag");
+    // init shaders and resources
+	shader = new Shader("shaders/shaders.vert", "shaders/shaders.frag");
 	carPaint = new Model("car/Paint_LOD0.obj");
 	carBody = new Model("car/Body_LOD0.obj");
 	carLight = new Model("car/Light_LOD0.obj");
@@ -374,7 +374,7 @@ void drawScene(){
     glBindVertexArray(0);
     glDepthFunc(GL_LESS); // set depth function back to default
 
-    // render floor and car with the same shader
+    // render floor and car with the same shaders
     shader->use();
 
     // light uniforms

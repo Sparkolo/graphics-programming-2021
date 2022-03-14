@@ -76,14 +76,13 @@ struct Config {
     float attenuationC1 = 0.1;
     float attenuationC2 = 0.1;
 
-    // TODO exercise 9.2 scale config variable
-
-
     // floor texture mode
     unsigned int wrapSetting = GL_REPEAT;
     unsigned int minFilterSetting = GL_LINEAR_MIPMAP_LINEAR;
     unsigned int magFilterSetting = GL_LINEAR;
 
+    // floor uv scale
+    float uvScale = 20.0f;
 } config;
 
 
@@ -210,14 +209,36 @@ int main()
 }
 
 // ------------------------------------
-// TODO EXERCISE 9.1 LOAD FLOOR TEXTURE
+// LOAD FLOOR TEXTURE
 // ------------------------------------
 
 void loadFloorTexture(){
-    // TODO this is mostly a copy and paste of the function 'TextureFromFile' in the 'model.h' file
-    //  however, you should use the min/mag/wrap settings that you can control in the user interface
-    //  and load the texture 'floor/checkboard_texture.png'
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load("floor/checkboard_texture.png", &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
 
+        glBindTexture(GL_TEXTURE_2D, floorTextureId);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, config.wrapSetting);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, config.wrapSetting);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, config.minFilterSetting);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, config.magFilterSetting);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: 'floor/checkboard_texture.png'" << std::endl;
+    }
+    stbi_image_free(data);
 }
 
 // --------------
@@ -276,7 +297,8 @@ void drawGui(){
         if(ImGui::RadioButton("LINEAR##2", config.magFilterSetting == GL_LINEAR )) {config.magFilterSetting = GL_LINEAR ;loadFloorTexture();}
         ImGui::Separator();
 
-        // TODO exercise 9.2 add slider to control uvScale
+        ImGui::Text("UV Scale for the floor texture: ");
+        ImGui::SliderFloat("uv scale", &config.uvScale, 0.0f, 100.0f);
 
         ImGui::Separator();
 
@@ -304,9 +326,7 @@ void drawFloor(){
     floorShader->setFloat("attenuationC1", config.attenuationC1);
     floorShader->setFloat("attenuationC2", config.attenuationC2);
 
-    // TODO exercise 9.2 send uvScale to the shader as a uniform variable
-
-
+    floorShader->setFloat("uv_scale", config.uvScale);
 
     // camera parameters
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);

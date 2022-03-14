@@ -21,7 +21,8 @@ uniform mat4 invTranspMV; // inverse of the transpose of (view * model) (used to
 // light uniform variables
 uniform vec3 lightPosition;
 
-// TODO exercise 9.2, get uvScale as a uniform
+// uv scale
+uniform float uv_scale;
 
 void main() {
    // vertex in eye space (for light computation in eye space)
@@ -38,6 +39,5 @@ void main() {
    vs_out.Pos_eye = Pos_eye.xyz;
    vs_out.N_eye = N_eye;
    vs_out.Light_eye = Light_eye.xyz;
-   // TODO exercise 9.2, use uvScale to scale the texture coordinates
-   vs_out.textCoord = textCoord;
+   vs_out.textCoord = textCoord * uv_scale;
 }

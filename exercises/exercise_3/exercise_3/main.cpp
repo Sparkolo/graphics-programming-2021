@@ -47,9 +47,11 @@ SceneObject planePropeller;
 float currentTime;
 Shader* shaderProgram;
 
+float scaleSize = 0.1f;
 float planeHeading = 0.0f;
+float rotationSpeed = 2.0f;
 float tiltAngle = 0.0f;
-float planeSpeed = 0.005f;
+float planeSpeed = 0.01f;
 glm::vec2 planePosition = glm::vec2(0.0,0.0);
 
 
@@ -86,9 +88,9 @@ int main()
         return -1;
     }
 
-    // build and compile our shader program
+    // build and compile our shaders program
     // ------------------------------------
-    shaderProgram = new Shader("shaders/shader.vert", "shaders/shader.frag");
+    shaderProgram = new Shader("shaders/shaders.vert", "shaders/shaders.frag");
 
     // the model was originally baked with lights for a left handed coordinate system, we are "fixing" the z-coordinate
     // so we can work with a right handed coordinate system
@@ -152,15 +154,50 @@ int main()
 
 
 void drawPlane(){
-    // TODO 3.all create and apply your transformation matrices here
-    //  you will need to transform the pose of the pieces of the plane by manipulating glm matrices and uploading a
-    //  uniform mat4 model matrix to the vertex shader
+    // update the plane position
+    planePosition += planeSpeed * glm::vec2(-glm::sin(glm::radians(planeHeading)), glm::cos(glm::radians(planeHeading)));
+    if(glm::abs(planePosition.x) > 1.0f || glm::abs(planePosition.y) > 1.0f)
+        planePosition *= -1.0f;
+
+    // Create the base transformation matrix
+    glm::mat4 baseTran = glm::mat4(1.0f);
+    baseTran = glm::translate(baseTran, glm::vec3(planePosition, .0f));
+    baseTran = glm::rotate(baseTran, glm::radians(planeHeading), glm::vec3(.0f, .0f, 1.0f));
+    baseTran = glm::rotate(baseTran, glm::radians(tiltAngle), glm::vec3(.0f, 1.0f, .0f));
+    baseTran = glm::scale(baseTran, glm::vec3(scaleSize));
+    shaderProgram->setMat4("transform", baseTran);
+
+    // Create the plane pieces transformation matrix
+    glm::mat4 pieceTran = glm::mat4(1.0f);
 
     // body
     drawSceneObject(planeBody);
     // right wing
     drawSceneObject(planeWing);
-
+    // left wing
+    pieceTran = glm::scale(pieceTran, glm::vec3(-1.0f, 1.0f, 1.0f));
+    shaderProgram->setMat4("transform", baseTran * pieceTran);
+    drawSceneObject(planeWing);
+    // right tail
+    pieceTran = glm::mat4(1.0f);
+    pieceTran = glm::translate(pieceTran, glm::vec3(.0f, -.5f, .0f));
+    pieceTran = glm::scale(pieceTran, glm::vec3(.5f));
+    shaderProgram->setMat4("transform", baseTran * pieceTran);
+    drawSceneObject(planeWing);
+    // left tail
+    pieceTran = glm::mat4(1.0f);
+    pieceTran = glm::translate(pieceTran, glm::vec3(.0f, -.5f, .0f));
+    pieceTran = glm::scale(pieceTran, glm::vec3(-.5f, .5f, .5f));
+    shaderProgram->setMat4("transform", baseTran * pieceTran);
+    drawSceneObject(planeWing);
+    // propeller
+    pieceTran = glm::mat4(1.0f);
+    pieceTran = glm::translate(pieceTran, glm::vec3(.0f, .5f, .0f));
+    pieceTran = glm::rotate(pieceTran, 4.0f * (float)glfwGetTime(), glm::vec3(.0f, 1.0f, .0f));
+    pieceTran = glm::rotate(pieceTran, glm::radians(90.0f), glm::vec3(1.0f, .0f, .0f));
+    pieceTran = glm::scale(pieceTran, glm::vec3(.5f));
+    shaderProgram->setMat4("transform", baseTran * pieceTran);
+    drawSceneObject(planePropeller);
 }
 
 void drawSceneObject(SceneObject obj){
@@ -169,8 +206,6 @@ void drawSceneObject(SceneObject obj){
 }
 
 void setup(){
-
-    // TODO 3.3 you will need to load one additional object.
     PlaneModel &airplane = PlaneModel::getInstance();
     // initialize plane body mesh objects
     planeBody.VAO = createVertexArray(airplane.planeBodyVertices,
@@ -184,6 +219,11 @@ void setup(){
                                       airplane.planeWingIndices);
     planeWing.vertexCount = airplane.planeWingIndices.size();
 
+    // initialize the plane propeller mesh objects
+    planePropeller.VAO = createVertexArray(airplane.planePropellerVertices,
+                                           airplane.planePropellerColors,
+                                           airplane.planePropellerIndices);
+    planePropeller.vertexCount = airplane.planePropellerIndices.size();
 }
 
 
@@ -193,13 +233,13 @@ unsigned int createVertexArray(std::vector<float> &positions, std::vector<float>
     // bind vertex array object
     glBindVertexArray(VAO);
 
-    // set vertex shader attribute "pos"
+    // set vertex shaders attribute "pos"
     createArrayBuffer(positions); // creates and bind  the VBO
     int posAttributeLocation = glGetAttribLocation(shaderProgram->ID, "pos");
     glEnableVertexAttribArray(posAttributeLocation);
     glVertexAttribPointer(posAttributeLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    // set vertex shader attribute "color"
+    // set vertex shaders attribute "color"
     createArrayBuffer(colors); // creates and bind the VBO
     int colorAttributeLocation = glGetAttribLocation(shaderProgram->ID, "color");
     glEnableVertexAttribArray(colorAttributeLocation);
@@ -237,11 +277,16 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    // TODO 3.4 control the plane (turn left and right) using the A and D keys
-    // you will need to read A and D key press inputs
-    // if GLFW_KEY_A is GLFW_PRESS, plane turn left
-    // if GLFW_KEY_D is GLFW_PRESS, plane turn right
-
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        planeHeading += rotationSpeed;
+        tiltAngle = -45.0f;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        planeHeading -= rotationSpeed;
+        tiltAngle = 45.0f;
+    }
+    else
+        tiltAngle = .0f;
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

@@ -39,21 +39,38 @@ out vec4 FragColor;
 
 float ShadowCalculation(vec4 lightSpacePos)
 {
-   // TODO exercise 12.1 - correct sampling coordinate
    //  lightSpacePos is in the [-1, 1] range, but textures are sampled in the [0, 1]
+   vec3 lightSpaceCoord = lightSpacePos.xyz * 0.5 + vec3(0.5);
+   float currentDepth = lightSpaceCoord.z;
 
+   // fix the shadow bias based on the light incident angle
+   float finalShadowBias = max((shadowBias/10.0) * (1.0 - dot(normalize(fs_in.Norm_tangent), normalize(fs_in.LightDir_tangent))), shadowBias);
 
    float shadow = 0.0;
+   float closestDepth = -1.0;
    if(!softShadows){
-      // TODO exercise 12.1 - single sample shadow
       //  mind that, when you sample the shadowMap texture, the depth information is contained in the red channel
-
-      // TODO exercise 12.2 - use the shadowBias to apply an offset to the sampled distance
-
+      closestDepth = texture(shadowMap, lightSpaceCoord.xy).r;
+      shadow = currentDepth - finalShadowBias > closestDepth ? 1.0 : 0.0;
    }
    else {
-      // TODO exercise 12.3 - sample and test multiple texels and set shadow to the weighted contribution of all shadow tests
+      vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
 
+      float weight = 0.0;
+      float weightsSum = 0.0;
+      for (int i=-1; i<2; i++) {
+         for (int j=-1; j<2; j++) {
+            closestDepth = texture(shadowMap, lightSpaceCoord.xy + vec2(i,j) * texelSize).r;
+
+            // Setup weights for weighted average
+            weight = i == 0 ? 0.5 : 0.25;
+            weight += j == 0 ? 0.5 : 0.25;
+            weightsSum += weight;
+
+            shadow += currentDepth - finalShadowBias > closestDepth ? weight : 0.0;
+         }
+      }
+      shadow /= weightsSum;
    }
 
    return shadow;
@@ -104,9 +121,7 @@ void main()
 
 
    // SHADOW
-   // TODO exercise 12 - complete the implementation of the ShadowCalculation function
    float shadow = ShadowCalculation(fs_in.Pos_lightSpace);
 
-   // TODO exercise 12.1 - use the shadow value to modulate the diffuse and specular colors of the fragment
-   FragColor = vec4(ambient * ambientOcclusion + (diffuse + specular) * ambientOcclusion, albedo.a);
+   FragColor = vec4(ambient * ambientOcclusion + (1.0 - shadow) * (diffuse + specular) * ambientOcclusion, albedo.a);
 }

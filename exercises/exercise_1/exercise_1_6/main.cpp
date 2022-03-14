@@ -25,12 +25,12 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
 
 
-// shader programs
+// shaders programs
 // ---------------
 const char *vertexShaderSource = "#version 330 core\n"
                                  "layout (location = 0) in vec3 aPos;\n"
                                  "layout (location = 1) in vec3 aColor;\n"
-                                 "out vec3 vtxColor; // output a color to the fragment shader\n"
+                                 "out vec3 vtxColor; // output a color to the fragment shaders\n"
                                  "void main()\n"
                                  "{\n"
                                  "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
@@ -83,14 +83,14 @@ int main()
     }
 
 
-    // build and compile our shader program
+    // build and compile our shaders program
     // ------------------------------------
 
-    // vertex shader
+    // vertex shaders
     int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
-    // check for shader compile errors
+    // check for shaders compile errors
     int success;
     char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -100,11 +100,11 @@ int main()
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
-    // fragment shader
+    // fragment shaders
     int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
-    // check for shader compile errors
+    // check for shaders compile errors
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
@@ -131,7 +131,7 @@ int main()
     // -------------------------------
     unsigned int VAO, vertexCount;
     // generate geometry in a vertex array object (VAO), record the number of vertices in the mesh,
-    // tells the shader how to read it
+    // tells the shaders how to read it
     setupShape(shaderProgram, VAO, vertexCount);
 
 
@@ -174,24 +174,21 @@ void createArrayBuffer(const std::vector<float> &array, unsigned int &VBO){
 }
 
 
-// create the geometry, a vertex array object representing it, and set how a shader program should read it
+// create the geometry, a vertex array object representing it, and set how a shaders program should read it
 // -------------------------------------------------------------------------------------------------------
 void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int &vertexCount){
 
-    unsigned int posVBO, colorVBO;
+    unsigned int posColorVBO;
     createArrayBuffer(std::vector<float>{
             // position
             0.0f,  0.0f, 0.0f,
             0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f, 0.0f
-    }, posVBO);
-
-    createArrayBuffer( std::vector<float>{
+            0.5f,  0.5f, 0.0f,
             // color
-            1.0f,  0.0f, 0.0f,
+            1.0f,  1.0f, 0.0f,
             1.0f,  0.0f, 0.0f,
             1.0f,  0.0f, 0.0f
-    }, colorVBO);
+    }, posColorVBO);
 
     // tell how many vertices to draw
     vertexCount = 3;
@@ -202,8 +199,8 @@ void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int
     // bind vertex array object
     glBindVertexArray(VAO);
 
-    // set vertex shader attribute "aPos"
-    glBindBuffer(GL_ARRAY_BUFFER, posVBO);
+    // set vertex shaders attribute "aPos"
+    glBindBuffer(GL_ARRAY_BUFFER, posColorVBO);
 
     int posSize = 3;
     int posAttributeLocation = glGetAttribLocation(shaderProgram, "aPos");
@@ -211,14 +208,14 @@ void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int
     glEnableVertexAttribArray(posAttributeLocation);
     glVertexAttribPointer(posAttributeLocation, posSize, GL_FLOAT, GL_FALSE, 0, 0);
 
-    // set vertex shader attribute "aColor"
-    glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
+    // set vertex shaders attribute "aColor"
+    glBindBuffer(GL_ARRAY_BUFFER, posColorVBO);
 
     int colorSize = 3;
     int colorAttributeLocation = glGetAttribLocation(shaderProgram, "aColor");
 
     glEnableVertexAttribArray(colorAttributeLocation);
-    glVertexAttribPointer(colorAttributeLocation, colorSize, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(colorAttributeLocation, colorSize, GL_FLOAT, GL_FALSE, 0, (GLvoid *) (9*sizeof(GLfloat)));
 
 }
 
@@ -226,7 +223,7 @@ void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int
 // tell opengl to draw a vertex array object (VAO) using a give shaderProgram
 // --------------------------------------------------------------------------
 void draw(const unsigned int shaderProgram, const unsigned int VAO, const unsigned int vertexCount){
-    // set active shader program
+    // set active shaders program
     glUseProgram(shaderProgram);
     // bind vertex array object
     glBindVertexArray(VAO);

@@ -29,7 +29,7 @@ const unsigned int particleSize = 5;            // particle attributes
 
 const unsigned int sizeOfFloat = 4;             // bytes in a float
 unsigned int particleId = 0;                    // keep track of last particle to be updated
-Shader *shaderProgram;                          // our shader program
+Shader *shaderProgram;                          // our shaders program
 
 int main()
 {
@@ -65,12 +65,12 @@ int main()
         return -1;
     }
 
-    // build and compile our shader program
+    // build and compile our shaders program
     // ------------------------------------
-    shaderProgram = new Shader("shaders/shader.vert", "shaders/shader.frag");
+    shaderProgram = new Shader("shaders/shaders.vert", "shaders/shaders.frag");
 
     // NEW!
-    // enable built in variable gl_PointSize in the vertex shader
+    // enable built in variable gl_PointSize in the vertex shaders
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     // TODO 2.4 enable alpha blending (for transparency)
@@ -100,7 +100,7 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // set shader program and the uniform value "currentTime"
+        // set shaders program and the uniform value "currentTime"
         shaderProgram->use();
 
         // TODO 2.3 set uniform variable related to current time
@@ -140,7 +140,7 @@ void bindAttributes(){
     glEnableVertexAttribArray(vertexLocation);
     glVertexAttribPointer(vertexLocation, posSize, GL_FLOAT, GL_FALSE, particleSize * sizeOfFloat, 0);
 
-    // TODO 2.2 set velocity and timeOfBirth shader attributes
+    // TODO 2.2 set velocity and timeOfBirth shaders attributes
     int velSize = 2;
     GLuint vertexVelocity = glGetAttribLocation(shaderProgram->ID, "velocity");
     glEnableVertexAttribArray(vertexVelocity);

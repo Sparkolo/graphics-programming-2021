@@ -1,16 +1,28 @@
 #version 330 core
+in vec2 gl_PointCoord;
+in float age;
 
 out vec4 fragColor;
 
-// TODO 2.6: should receive the age of the particle as an input variable
-
 void main()
 {
-    // TODO 2.4 set the alpha value to 0.2 (alpha is the 4th value of the output color)
+    float xDist = gl_PointCoord.x - 0.5f;
+    float yDist = gl_PointCoord.y - 0.5f;
+    float dist = sqrt(xDist * xDist + yDist * yDist);
+    dist = dist > 0.5f ? 0.5f : dist;
 
-    // TODO 2.5 and 2.6: improve the particles appearance
+    float maxAge = 10.0f;
+    float agePercentage = age/maxAge;
 
-    // remember to replace the default output (vec4(1.0,1.0,1.0,1.0)) with the color and alpha values that you have computed
-    fragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    vec3 finalColor;
+    if(agePercentage < 0.5f)
+        finalColor = vec3(1.0f,
+                          mix(1.0f, 0.5f, agePercentage * 2),
+                          mix(0.05f, 0.01f, agePercentage * 2));
+    else
+        finalColor = vec3(mix(1.0f, 0.0f, (agePercentage - 0.5f) * 2),
+                          mix(0.5f, 0.0f, (agePercentage - 0.5f) * 2),
+                          mix(0.01f, 0.0f, (agePercentage - 0.5f) * 2));
 
+    fragColor = vec4(finalColor, mix(1.0f - dist * 2.0, 0.0f, agePercentage));
 }
